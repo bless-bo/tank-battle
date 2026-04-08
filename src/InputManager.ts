@@ -3,6 +3,7 @@ import { Direction } from './utils/constants'
 export class InputManager {
   private keys: Set<string> = new Set()
   private touchDir: Direction | null = null
+  private pausePressed: boolean = false
 
   constructor() {
     window.addEventListener('keydown', this.onKeyDown.bind(this))
@@ -33,6 +34,9 @@ export class InputManager {
 
   private onKeyUp(e: KeyboardEvent): void {
     this.keys.delete(e.key)
+    if (e.key === 'p' || e.key === 'P') {
+      this.pausePressed = true
+    }
   }
 
   isUp(): boolean {
@@ -53,6 +57,14 @@ export class InputManager {
 
   isShoot(): boolean {
     return this.keys.has('Space')
+  }
+
+  isPause(): boolean {
+    if (this.pausePressed) {
+      this.pausePressed = false
+      return true
+    }
+    return false
   }
 
   getDirection(): Direction | null {

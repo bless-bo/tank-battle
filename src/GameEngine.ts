@@ -1,4 +1,4 @@
-import { GameState, Direction, EnemyType, TILE_SIZE, CANVAS_WIDTH, CANVAS_HEIGHT } from './utils/constants'
+import { GameState, Direction, EnemyType, TILE_SIZE, CANVAS_WIDTH, CANVAS_HEIGHT, TileType } from './utils/constants'
 import { InputManager } from './InputManager'
 import { GameMap } from './map/Map'
 import { PlayerTank } from './entities/PlayerTank'
@@ -21,6 +21,7 @@ export class GameEngine {
   private enemiesSpawned: number = 0
   private enemiesToSpawn: number = 5
   private lastTime: number = 0
+  private basePos: { x: number; y: number } = { x: 12, y: 11 }
 
   constructor() {
     this.canvas = document.getElementById('gameCanvas') as HTMLCanvasElement
@@ -57,7 +58,34 @@ export class GameEngine {
   }
 
   private update(dt: number): void {
-    if (this.state !== GameState.PLAYING) return
+    // Handle menu state
+    if (this.state === GameState.MENU) {
+      if (this.input.isShoot()) {
+        this.init()
+      }
+      return
+    }
+
+    // Handle game over state
+    if (this.state === GameState.GAMEOVER) {
+      if (this.input.isShoot()) {
+        this.init()
+      }
+      return
+    }
+
+    // Handle pause
+    if (this.input.isPause()) {
+      this.state = GameState.PAUSED
+      return
+    }
+
+    if (this.state === GameState.PAUSED) {
+      if (this.input.isPause()) {
+        this.state = GameState.PLAYING
+      }
+      return
+    }
 
     // Player
     const dir = this.input.getDirection()
@@ -78,6 +106,7 @@ export class GameEngine {
     if (Collision.tankVsMap(this.player.getRect(), this.map)) {
       // Push back
       this.player.pos.x = Math.floor(this.player.pos.x / TILE_SIZE) * TILE_SIZE
+      this.player.pos.y = Math.floor(this.player.pos.y / TILE_SIZE) * TILE_SIZE
     }
 
     // Spawn enemies
@@ -113,6 +142,7 @@ export class GameEngine {
 
       // Bullet vs tanks
       if (b.owner === 'player') {
+        // Check enemy hits
         for (let i = this.enemies.length - 1; i >= 0; i--) {
           if (Collision.checkAABB(b.getRect(), this.enemies[i].getRect())) {
             this.enemies[i].takeDamage()
@@ -123,7 +153,15 @@ export class GameEngine {
             return false
           }
         }
+        // Check if bullet hits base (base is at tile 12,11)
+        const baseTileX = Math.floor((b.pos.x + b.width / 2) / TILE_SIZE)
+        const baseTileY = Math.floor((b.pos.y + b.height / 2) / TILE_SIZE)
+        if (baseTileX === this.basePos.x && baseTileY === this.basePos.y) {
+          this.state = GameState.GAMEOVER
+          return false
+        }
       } else {
+        // Enemy bullet - check if hits player (not own tank, etc.)
         if (Collision.checkAABB(b.getRect(), this.player.getRect())) {
           this.player.takeDamage()
           if (!this.player.isAlive) {
@@ -167,9 +205,10 @@ export class GameEngine {
       this.ctx.fillStyle = '#fff'
       this.ctx.font = '32px Arial'
       this.ctx.textAlign = 'center'
-      this.ctx.fillText('经典坦克大战', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20)
+      this.ctx.fillText('经典坦克大战', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 40)
       this.ctx.font = '16px Arial'
-      this.ctx.fillText('按空格键开始', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20)
+      this.ctx.fillText('方向键移动，空格射击，P键暂停', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2)
+      this.ctx.fillText('按空格键开始', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30)
       return
     }
 
@@ -179,8 +218,27 @@ export class GameEngine {
       this.ctx.textAlign = 'center'
       this.ctx.fillText('游戏结束', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20)
       this.ctx.font = '16px Arial'
-      this.ctx.fillText(`得分: ${this.score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20)
+      this.ctx.fillText(`得分: ${this.score}  关卡: ${this.level}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20)
       this.ctx.fillText('按空格键重新开始', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 50)
+      return
+    }
+
+    if (this.state === GameState.PAUSED) {
+      // Render game state in background
+      this.map.render(this.ctx)
+      this.player.render(this.ctx)
+      this.enemies.forEach(e => e.render(this.ctx))
+      this.bullets.forEach(b => b.render(this.ctx))
+
+      // Overlay
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
+      this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+      this.ctx.fillStyle = '#fff'
+      this.ctx.font = '32px Arial'
+      this.ctx.textAlign = 'center'
+      this.ctx.fillText('游戏暂停', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2)
+      this.ctx.font = '16px Arial'
+      this.ctx.fillText('按P键继续', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30)
       return
     }
 
