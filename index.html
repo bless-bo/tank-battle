@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>经典坦克大战</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #000;
+      font-family: Arial, sans-serif;
+    }
+    #game-container {
+      position: relative;
+    }
+    canvas {
+      display: block;
+      border: 2px solid #333;
+    }
+    #touch-controls {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      justify-content: space-around;
+      padding: 0 20px;
+    }
+    .touch-btn {
+      width: 60px;
+      height: 60px;
+      background: rgba(255,255,255,0.3);
+      border: 2px solid #fff;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @media (max-width: 768px) {
+      #touch-controls { display: flex; }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div id="touch-controls">
+      <button class="touch-btn" data-dir="LEFT">◀</button>
+      <button class="touch-btn" data-dir="UP">▲</button>
+      <button class="touch-btn" data-dir="DOWN">▼</button>
+      <button class="touch-btn" data-dir="RIGHT">▶</button>
+      <button class="touch-btn" data-dir="SHOOT">●</button>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "tank-battle",
+  "version": "1.0.0",
+  "description": "Classic Tank Battle Web Game",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
+  }
+}
